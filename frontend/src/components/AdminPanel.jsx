@@ -1,105 +1,155 @@
 import { useState, useEffect } from "react";
-import { getFlights, bookFlight, startPayment } from "../api";
+import { getAdminStats, getAllBookings, addFlight } from "../api";
 
-function FlightList({ token, refreshBookings }) {
-  const [flights, setFlights] = useState([]);
-  const [originInput, setOriginInput] = useState("");
-  const [destinationInput, setDestinationInput] = useState("");
-  const [message, setMessage] = useState("");
+function AdminPanel({ token }) {
+  const [stats, setStats] = useState(null);
+  const [allBookings, setAllBookings] = useState([]);
 
-  // load all flights when the component first shows up
+  // form fields for adding a new flight
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [departureTime, setDepartureTime] = useState("");
+  const [price, setPrice] = useState("");
+  const [seats, setSeats] = useState("");
+  const [formMessage, setFormMessage] = useState("");
+
   useEffect(() => {
-    loadFlights();
+    loadStats();
+    loadAllBookings();
   }, []);
 
-  const loadFlights = async () => {
+  const loadStats = async () => {
     try {
-      const data = await getFlights();
-      setFlights(data);
+      const data = await getAdminStats(token);
+      setStats(data);
     } catch (err) {
       console.log(err);
     }
   };
 
-  const handleSearch = async (e) => {
+  const loadAllBookings = async () => {
+    try {
+      const data = await getAllBookings(token);
+      setAllBookings(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleAddFlight = async (e) => {
     e.preventDefault();
+    setFormMessage("");
+
     try {
-      const data = await getFlights(originInput, destinationInput);
-      setFlights(data);
+      await addFlight(
+        {
+          origin: origin,
+          destination: destination,
+          departure_time: departureTime,
+          price: Number(price),
+          seats_available: Number(seats),
+        },
+        token
+      );
+
+      setFormMessage("Flight added successfully!");
+
+      // clear the form
+      setOrigin("");
+      setDestination("");
+      setDepartureTime("");
+      setPrice("");
+      setSeats("");
+
+      loadStats(); // refresh the numbers
     } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleBookClick = async (flightId) => {
-    setMessage("");
-    try {
-      // step 1 - create the booking
-      const booking = await bookFlight(flightId, token);
-
-      // step 2 - start stripe payment for that booking
-      const paymentData = await startPayment(booking.id, token);
-
-      // open stripe checkout page in new tab
-      window.open(paymentData.url, "_blank");
-
-      setMessage("Booking created! Complete payment in the new tab.");
-      loadFlights(); // refresh seat counts
-      refreshBookings(); // tell parent to refresh my bookings list too
-    } catch (err) {
-      setMessage("Error: " + err.message);
+      setFormMessage("Error: " + err.message);
     }
   };
 
   return (
     <div>
-      <h2>Search Flights</h2>
+      <h2>Admin Dashboard</h2>
 
-      <form onSubmit={handleSearch} className="search-form">
+      {stats && (
+        <div className="stats-row">
+          <div className="stat-card">
+            <p className="stat-number">{stats.totalBookings}</p>
+            <p>Total Bookings</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-number">{stats.confirmedBookings}</p>
+            <p>Confirmed</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-number">${stats.totalRevenue}</p>
+            <p>Revenue</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-number">{stats.totalFlights}</p>
+            <p>Flights</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-number">{stats.totalUsers}</p>
+            <p>Users</p>
+          </div>
+        </div>
+      )}
+
+      <h3>Add New Flight</h3>
+      <form onSubmit={handleAddFlight} className="admin-form">
         <input
           type="text"
-          placeholder="From"
-          value={originInput}
-          onChange={(e) => setOriginInput(e.target.value)}
+          placeholder="Origin"
+          value={origin}
+          onChange={(e) => setOrigin(e.target.value)}
+          required
         />
         <input
           type="text"
-          placeholder="To"
-          value={destinationInput}
-          onChange={(e) => setDestinationInput(e.target.value)}
+          placeholder="Destination"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          required
         />
-        <button type="submit">Search</button>
-        <button type="button" onClick={loadFlights}>
-          Show All
-        </button>
+        <input
+          type="datetime-local"
+          value={departureTime}
+          onChange={(e) => setDepartureTime(e.target.value)}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Price"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Seats"
+          value={seats}
+          onChange={(e) => setSeats(e.target.value)}
+          required
+        />
+        <button type="submit">Add Flight</button>
       </form>
 
-      {message && <p className="info-text">{message}</p>}
+      {formMessage && <p className="info-text">{formMessage}</p>}
 
-      <div className="flight-list">
-        {flights.length === 0 && <p>No flights found</p>}
-
-        {flights.map((flight) => (
-          <div className="flight-card" key={flight.id}>
-            <p>
-              <strong>
-                {flight.origin} → {flight.destination}
-              </strong>
-            </p>
-            <p>Departure: {new Date(flight.departure_time).toLocaleString()}</p>
-            <p>Price: ${flight.price}</p>
-            <p>Seats left: {flight.seats_available}</p>
-            <button
-              disabled={flight.seats_available < 1}
-              onClick={() => handleBookClick(flight.id)}
-            >
-              {flight.seats_available < 1 ? "Sold Out" : "Book Now"}
-            </button>
-          </div>
-        ))}
-      </div>
+      <h3>All Bookings</h3>
+      {allBookings.map((b) => (
+        <div className="booking-item" key={b.id}>
+          <span>
+            {b.user_name} ({b.email}) - {b.origin} → {b.destination}
+          </span>
+          <span className={"status-badge status-" + b.status}>
+            {b.status}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
 
-export default FlightList;
+export default AdminPanel;
