@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAdminStats, getAllBookings, addFlight } from "../api";
+import { motion } from "framer-motion";
 
 function AdminPanel({ token }) {
   const [stats, setStats] = useState(null);
@@ -72,29 +73,27 @@ function AdminPanel({ token }) {
       <h2>Admin Dashboard</h2>
 
       {stats && (
-        <div className="stats-row">
-          <div className="stat-card">
-            <p className="stat-number">{stats.totalBookings}</p>
-            <p>Total Bookings</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-number">{stats.confirmedBookings}</p>
-            <p>Confirmed</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-number">${stats.totalRevenue}</p>
-            <p>Revenue</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-number">{stats.totalFlights}</p>
-            <p>Flights</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-number">{stats.totalUsers}</p>
-            <p>Users</p>
-          </div>
-        </div>
-      )}
+  <div className="stats-row">
+    {[
+      { label: "Total Bookings", value: stats.totalBookings },
+      { label: "Confirmed", value: stats.confirmedBookings },
+      { label: "Revenue", value: "$" + stats.totalRevenue },
+      { label: "Flights", value: stats.totalFlights },
+      { label: "Users", value: stats.totalUsers },
+    ].map((item, index) => (
+      <motion.div
+        className="stat-card"
+        key={item.label}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: index * 0.08 }}
+      >
+        <p className="stat-number">{item.value}</p>
+        <p>{item.label}</p>
+      </motion.div>
+    ))}
+  </div>
+)}
 
       <h3>Add New Flight</h3>
       <form onSubmit={handleAddFlight} className="admin-form">
@@ -137,12 +136,19 @@ function AdminPanel({ token }) {
 
       {formMessage && <p className="info-text">{formMessage}</p>}
 
-      <h3>All Bookings</h3>
+     <h3>All Bookings</h3>
       {allBookings.map((b) => (
         <div className="booking-item" key={b.id}>
-          <span>
-            {b.user_name} ({b.email}) - {b.origin} → {b.destination}
-          </span>
+          <div>
+            <span>
+              {b.user_name} ({b.email}) - {b.origin} → {b.destination}
+            </span>
+            <p className="booking-detail">
+              {b.passengers} passenger(s)
+              {b.extra_baggage_kg > 0 && ` · +${b.extra_baggage_kg}kg extra baggage`}
+              {" · $"}{b.total_price}
+            </p>
+          </div>
           <span className={"status-badge status-" + b.status}>
             {b.status}
           </span>

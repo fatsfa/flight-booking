@@ -1,6 +1,6 @@
 import {useState} from "react"
 import {signupUser} from "../api"
-
+import { motion } from "framer-motion";
 function Signup({ switchToLogin }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +26,12 @@ function Signup({ switchToLogin }) {
   };
 
   return (
-    <div className="auth-box">
+    <motion.div
+  className="auth-box"
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4 }}
+>
       <h2>Sign Up</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -71,7 +76,7 @@ function Signup({ switchToLogin }) {
           Login here
         </span>
       </p>
-    </div>
+    </motion.div>
   );
 }
 

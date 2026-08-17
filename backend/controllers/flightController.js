@@ -3,16 +3,14 @@ const {
 }=require('../models/flightModel')
 const listFlights = async (req, res) => {
   try {
-    const {origin,destination} = req.query;
-    const flights = (origin && destination)
-      ? await searchFlights(origin, destination)
-      : await getAllFlights()
-    res.json(flights)
+    const { origin, destination, date } = req.query;
+    const flights = await searchFlights(origin, destination, date);
+    res.json(flights);
   } catch (err) {
-    console.error(err)
+    console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
   }
-}
+};
 const addFlight=async (req, res) =>{
   try {
     const { origin, destination, departure_time, price, seats_available } = req.body;
