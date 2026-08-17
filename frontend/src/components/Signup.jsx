@@ -32,6 +32,7 @@ function Signup({ switchToLogin }) {
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.4 }}
 >
+      <p className="eyebrow auth-eyebrow">Create account</p>
       <h2>Sign Up</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -70,7 +71,7 @@ function Signup({ switchToLogin }) {
         <button type="submit">Sign Up</button>
       </form>
 
-      <p>
+      <p className="auth-link-row">
         Already have an account?{" "}
         <span className="link-text" onClick={switchToLogin}>
           Login here

@@ -16,26 +16,45 @@ function App() {
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
+    const savedRefreshToken = localStorage.getItem("refreshToken");
     const savedUser = localStorage.getItem("user");
 
-    if (savedToken && savedUser) {
+    if (savedToken && savedRefreshToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
     }
   }, []);
 
-  const handleLoginSuccess = (newToken, newUser) => {
+  const handleLoginSuccess = (newToken, newRefreshToken, newUser) => {
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem("token", newToken);
+    localStorage.setItem("refreshToken", newRefreshToken);
     localStorage.setItem("user", JSON.stringify(newUser));
   };
 
-  const handleLogout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await fetch("http://localhost:5000/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+    }
   };
 
   const triggerBookingsRefresh = () => {
@@ -58,25 +77,81 @@ function App() {
   );
 
   // this part renders the main app when logged in
-  const renderMainApp = () => (
-    <div className="container">
-      <div className="header-row">
-        <h1>Flight Booking</h1>
-        <div>
-          <span>
-            Hi, {user.name} ({user.role})
-          </span>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
+  const renderMainApp = () => {
+    if (user?.role === "admin") {
+      return (
+        <div className="app-shell">
+          <header className="topbar">
+            <div className="brand-block">
+              <div className="brand-mark">A</div>
+              <div>
+                <p className="brand-name">Aurelia Air</p>
+                <small>Admin dashboard</small>
+              </div>
+            </div>
+
+            <div className="topbar-user">
+              <span className="user-pill">
+                {user.name} · {user.role}
+              </span>
+              <button onClick={handleLogout} className="logout-btn">
+                Logout
+              </button>
+            </div>
+          </header>
+
+          <div className="panel admin-panel-shell">
+            <AdminPanel token={token} />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="app-shell">
+        <header className="topbar">
+          <div className="brand-block">
+            <div className="brand-mark">A</div>
+            <div>
+              <p className="brand-name">Aurelia Air</p>
+              <small>Private booking lounge</small>
+            </div>
+          </div>
+
+          <div className="topbar-user">
+            <span className="user-pill">
+              {user.name} · {user.role}
+            </span>
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </div>
+        </header>
+
+        <section className="hero-panel">
+          <div>
+            <p className="eyebrow">Curated travel experiences</p>
+            <h1>Fly beyond the ordinary.</h1>
+          </div>
+          <div className="hero-meta">
+            <span>Premium routes</span>
+            <span>Fast checkout</span>
+            <span>Flexible booking</span>
+          </div>
+        </section>
+
+        <div className="workspace-grid">
+          <div className="panel main-panel">
+            <FlightList token={token} refreshBookings={triggerBookingsRefresh} />
+          </div>
+
+          <aside className="panel side-panel">
+            <MyBookings token={token} refreshTrigger={bookingsRefresh} />
+          </aside>
         </div>
       </div>
-
-      <FlightList token={token} refreshBookings={triggerBookingsRefresh} />
-      <MyBookings token={token} refreshTrigger={bookingsRefresh} />
-      {user.role === "admin" && <AdminPanel token={token} />}
-    </div>
-  );
+    );
+  };
 
   return (
     <Routes>

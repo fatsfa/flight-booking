@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMyBookings } from "../api";
+import { getMyBookings, cancelBooking } from "../api";
 
 function MyBookings({ token, refreshTrigger }) {
   const [bookings, setBookings] = useState([]);
@@ -14,6 +14,15 @@ function MyBookings({ token, refreshTrigger }) {
       setBookings(data);
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      await cancelBooking(bookingId, token);
+      loadBookings();
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -35,9 +44,16 @@ function MyBookings({ token, refreshTrigger }) {
               {" · $"}{b.total_price}
             </p>
           </div>
-          <span className={"status-badge status-" + b.status}>
-            {b.status}
-          </span>
+          <div>
+            <span className={"status-badge status-" + b.status}>
+              {b.status}
+            </span>
+            {(b.status === "pending" || b.status === "confirmed") && (
+              <button type="button" onClick={() => handleCancelBooking(b.id)} className="cancel-btn">
+                Cancel
+              </button>
+            )}
+          </div>
         </div>
       ))}
     </div>

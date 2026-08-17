@@ -1,13 +1,13 @@
-// controllers/paymentController.js
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const pool = require('../config/db');
+const { confirmBookingSeats } = require('../models/bookingModel');
 
-// Creates a Stripe Checkout Session for a given booking
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 const createCheckoutSession = async (req, res) => {
   try {
     const { bookingId } = req.body;
 
-    // look up the booking + flight info, including the fields we added
     const result = await pool.query(
       `SELECT bookings.id, bookings.status, bookings.passengers, bookings.extra_baggage_kg, bookings.total_price,
               flights.origin, flights.destination
@@ -20,7 +20,6 @@ const createCheckoutSession = async (req, res) => {
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
     if (booking.status !== 'pending') return res.status(400).json({ error: 'Booking is not payable' });
 
-    // build a readable description, e.g. "2 passenger(s), +10kg extra baggage"
     let description = `${booking.passengers} passenger(s)`;
     if (booking.extra_baggage_kg > 0) {
       description += `, +${booking.extra_baggage_kg}kg extra baggage`;
@@ -33,26 +32,30 @@ const createCheckoutSession = async (req, res) => {
           currency: 'usd',
           product_data: {
             name: `Flight: ${booking.origin} → ${booking.destination}`,
-            description: description,
+            description,
           },
-          unit_amount: Math.round(booking.total_price * 100), // total_price already includes passengers + baggage
+          unit_amount: Math.round(Number(booking.total_price) * 100),
         },
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: 'http://localhost:5173/payment-success?booking_id=' + booking.id,
-      cancel_url: 'http://localhost:5173/payment-cancelled?booking_id=' + booking.id,
+      success_url: `${frontendUrl}/payment-success?booking_id=${booking.id}`,
+      cancel_url: `${frontendUrl}/payment-cancelled?booking_id=${booking.id}`,
       metadata: { bookingId: booking.id.toString() },
     });
 
-    res.json({ url: session.url });
+    await pool.query(
+      'UPDATE bookings SET stripe_payment_intent = $1 WHERE id = $2',
+      [session.payment_intent, booking.id]
+    );
+
+    res.json({ url: session.url, sessionId: session.id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
   }
 };
 
-// Stripe calls this automatically after a payment completes
 const handleWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
@@ -66,15 +69,48 @@ const handleWebhook = async (req, res) => {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const bookingId = session.metadata.bookingId;
+    const bookingId = Number(session.metadata.bookingId);
 
-    await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', ['confirmed', bookingId]);
-    await pool.query(
-      'INSERT INTO payments (booking_id, stripe_payment_id, amount, status) VALUES ($1, $2, $3, $4)',
-      [bookingId, session.payment_intent, session.amount_total / 100, 'succeeded']
+    const eventCheck = await pool.query(
+      'SELECT 1 FROM payment_events WHERE event_id = $1',
+      [event.id]
     );
 
-    console.log(`Booking ${bookingId} confirmed via Stripe`);
+    if (eventCheck.rows.length > 0) {
+      return res.json({ received: true });
+    }
+
+    try {
+      const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
+
+      if (!booking.rows[0]) {
+        await pool.query('INSERT INTO payment_events (event_id) VALUES ($1)', [event.id]);
+        return res.json({ received: true });
+      }
+
+      if (booking.rows[0].status === 'confirmed') {
+        await pool.query('INSERT INTO payment_events (event_id) VALUES ($1)', [event.id]);
+        await pool.query(
+          `INSERT INTO payments (booking_id, stripe_payment_id, amount, status)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT DO NOTHING`,
+          [bookingId, session.payment_intent, session.amount_total / 100, 'succeeded']
+        );
+        return res.json({ received: true });
+      }
+
+      await confirmBookingSeats(bookingId);
+      await pool.query('INSERT INTO payment_events (event_id) VALUES ($1)', [event.id]);
+      await pool.query(
+        `INSERT INTO payments (booking_id, stripe_payment_id, amount, status)
+         VALUES ($1, $2, $3, $4)`,
+        [bookingId, session.payment_intent, session.amount_total / 100, 'succeeded']
+      );
+
+      console.log(`Booking ${bookingId} confirmed via Stripe`);
+    } catch (err) {
+      console.error('Payment confirmation failed:', err);
+    }
   }
 
   res.json({ received: true });

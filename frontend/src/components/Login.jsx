@@ -11,7 +11,7 @@ function Login({onLoginSuccess,switchToSignup}) {
     e.preventDefault(); 
     try {
       const data = await loginUser(email, password)
-      onLoginSuccess(data.token, data.user)
+      onLoginSuccess(data.accessToken, data.refreshToken, data.user)
     } catch (err){
       setErrorMsg(err.message)
     }
@@ -24,6 +24,7 @@ function Login({onLoginSuccess,switchToSignup}) {
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.4 }}
 >
+      <p className="eyebrow auth-eyebrow">Welcome back</p>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -51,7 +52,7 @@ function Login({onLoginSuccess,switchToSignup}) {
         <button type="submit">Login</button>
       </form>
 
-      <p>
+      <p className="auth-link-row">
         Don't have an account?{" "}
         <span className="link-text" onClick={switchToSignup}>
           Sign up here

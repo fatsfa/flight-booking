@@ -1,75 +1,258 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-deep: #070b1a;
+  --bg-mid: #101a2a;
+  --panel: rgba(14, 22, 35, 0.82);
+  --panel-soft: rgba(20, 31, 48, 0.82);
+  --panel-bright: rgba(255, 255, 255, 0.08);
+  --text: #edf3ff;
+  --text-soft: #b9c7d8;
+  --gold: #d7b36a;
+  --gold-soft: #f5d7a1;
+  --violet: #9a7cff;
+  --violet-strong: #7258ff;
+  --success: #41d39a;
+  --danger: #ff7a7a;
+  --border: rgba(255,255,255,0.12);
+  --shadow: 0 30px 80px rgba(7, 11, 26, 0.55);
+  --radius: 22px;
+}
+
 * {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
+  min-height: 100vh;
+  font-family: 'Manrope', 'Segoe UI', Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(122, 96, 255, 0.35), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(215, 179, 106, 0.18), transparent 22%),
+    linear-gradient(135deg, #060b18 0%, #0d1525 44%, #111d2d 100%);
+  color: var(--text);
+}
+
+button, input, select {
+  font: inherit;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+}
+
+#root {
   min-height: 100vh;
 }
 
-.container {
-  max-width: 850px;
-  margin: 0 auto;
-  padding: 30px 20px;
+h1, h2, h3, h4, p {
+  margin: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
 h1 {
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  font-weight: 700;
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: 1.07;
+  letter-spacing: -0.04em;
+  color: var(--text);
 }
 
-h2, h3 {
-  color: #fff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+h2 {
+  font-size: 1.7rem;
+  color: var(--text);
 }
 
-.header-row {
+h3 {
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.app-shell {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px 18px 52px;
+}
+
+.topbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  justify-content: space-between;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  background: rgba(11, 18, 28, 0.75);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
 }
 
-.header-row > div {
+.brand-block {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #fff;
-  font-weight: 500;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+  color: #1a1423;
+  box-shadow: 0 10px 26px rgba(215, 179, 106, 0.45);
+}
+
+.brand-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.brand-block small {
+  color: var(--text-soft);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.user-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(154, 124, 255, 0.18);
+  border: 1px solid rgba(154, 124, 255, 0.32);
+  color: var(--text);
+  font-weight: 600;
 }
 
 .logout-btn {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-weight: 600;
+  transition: 0.2s ease;
 }
 
 .logout-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
 }
 
-/* glass-effect cards, used everywhere */
-.auth-box,
-.flight-card,
-.search-form,
-.booking-item,
-.admin-form,
-.booking-panel {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+.hero-panel {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 26px 28px 22px;
+  margin-bottom: 26px;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(116, 88, 255, 0.46), rgba(20, 31, 48, 0.7)),
+    linear-gradient(120deg, rgba(215, 179, 106, 0.22), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  color: var(--gold-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.hero-meta span {
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr;
+  gap: 22px;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(11, 18, 28, 0.92), rgba(15, 22, 35, 0.82));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  box-shadow: 0 22px 55px rgba(7, 11, 26, 0.42);
+  padding: 18px;
+}
+
+.main-panel,
+.side-panel,
+.admin-panel-shell {
+  backdrop-filter: blur(16px);
 }
 
 .auth-box {
-  max-width: 380px;
-  margin: 60px auto;
-  padding: 36px 32px;
+  max-width: 440px;
+  margin: 54px auto;
+  padding: 34px 30px 28px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(18, 28, 41, 0.96), rgba(12, 18, 28, 0.92));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 26px 60px rgba(10, 14, 24, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.auth-eyebrow {
+  margin-bottom: 10px;
+}
+
+.auth-box h2 {
+  margin-bottom: 18px;
+  font-size: 2.1rem;
+}
+
+.admin-demo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(154, 124, 255, 0.1);
+  border: 1px solid rgba(154, 124, 255, 0.26);
+  color: var(--text-soft);
+}
+
+.auth-link-row {
+  margin-top: 16px;
+  color: var(--text-soft);
 }
 
 .form-group {
@@ -78,185 +261,344 @@ h2, h3 {
 
 .form-group label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  color: var(--text-soft);
   font-weight: 600;
-  font-size: 13px;
-  color: #444;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .form-group input,
 .search-form input,
 .admin-form input,
-.booking-panel select {
+.booking-panel select,
+.admin-filter-row select,
+.admin-filter-row input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: var(--text);
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.form-group input::placeholder,
+.search-form input::placeholder,
+.admin-filter-row input::placeholder {
+  color: rgba(237,243,255,0.5);
 }
 
 .form-group input:focus,
 .search-form input:focus,
-.admin-form input:focus {
-  outline: none;
-  border-color: #764ba2;
-  box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.15);
+.admin-form input:focus,
+.booking-panel select:focus,
+.admin-filter-row select:focus,
+.admin-filter-row input:focus {
+  border-color: rgba(215, 179, 106, 0.8);
+  box-shadow: 0 0 0 4px rgba(215, 179, 106, 0.14);
 }
 
 button {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border: none;
-  padding: 11px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: linear-gradient(135deg, var(--gold), #f0c574);
+  color: #1b1323;
+  font-weight: 800;
+  border-radius: 12px;
+  padding: 12px 18px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.2s ease;
+  box-shadow: 0 14px 24px rgba(215, 179, 106, 0.27);
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(118, 75, 162, 0.35);
-}
-
-button:active {
-  transform: translateY(0);
+  filter: brightness(1.04);
 }
 
 button:disabled {
-  background: #ccc;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
 .link-text {
-  color: #764ba2;
+  color: var(--gold-soft);
   cursor: pointer;
-  font-weight: 600;
-  text-decoration: underline;
-}
-
-.error-text {
-  color: #d32f2f;
-  font-size: 14px;
-  background: #fdecea;
-  padding: 8px 12px;
-  border-radius: 8px;
-}
-
-.success-text {
-  color: #2e7d32;
-  font-size: 14px;
-  background: #e8f5e9;
-  padding: 8px 12px;
-  border-radius: 8px;
-}
-
-.info-text {
-  color: #333;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  margin-bottom: 16px;
+  font-weight: 700;
 }
 
 .search-form {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
   flex-wrap: wrap;
-  padding: 18px;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1 1 180px;
+}
+
+.search-form input {
+  flex: 1 1 160px;
+}
+
+.suggestion-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  background: rgba(15, 24, 37, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+}
+
+.suggestion-list li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.suggestion-list li:hover {
+  background: rgba(154, 124, 255, 0.16);
 }
 
 .flight-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 36px;
+}
+
+.flight-card,
+.booking-item,
+.booking-panel,
+.admin-form {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 18px;
 }
 
 .flight-card {
-  padding: 20px;
-  transition: transform 0.2s ease;
-}
-
-.flight-card:hover {
-  transform: translateY(-3px);
+  padding: 18px;
 }
 
 .flight-card p {
-  margin: 5px 0;
-  color: #333;
+  color: var(--text-soft);
+  margin: 6px 0;
+}
+
+.flight-card strong {
+  color: var(--text);
+  font-size: 1.15rem;
 }
 
 .booking-panel {
-  margin-top: 14px;
-  padding: 18px;
-  background: rgba(245, 245, 250, 0.95);
-}
-
-.booking-panel select {
-  background: white;
-}
-
-.total-price {
-  font-size: 20px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 12px 0;
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.04);
 }
 
 .booking-panel-buttons {
   display: flex;
   gap: 10px;
+  margin-top: 16px;
+}
+
+.total-price {
+  margin-top: 12px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--gold-soft);
+}
+
+.passenger-form-box {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.passenger-form-box h4 {
+  margin-bottom: 12px;
+  color: var(--text);
 }
 
 .cancel-btn {
-  background: #999;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
 }
 
 .cancel-btn:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: rgba(255,255,255,0.12);
 }
 
 .booking-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 16px 18px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .booking-detail {
-  font-size: 13px;
-  color: #666;
-  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  margin-top: 6px;
 }
 
 .status-badge {
-  padding: 5px 14px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .status-pending {
-  background: linear-gradient(135deg, #ffd54f, #ffb300);
-  color: #5d4200;
+  background: rgba(215,179,106,0.18);
+  color: var(--gold-soft);
+  border: 1px solid rgba(215,179,106,0.35);
 }
 
 .status-confirmed {
-  background: linear-gradient(135deg, #66bb6a, #43a047);
-  color: white;
+  background: rgba(65,211,154,0.14);
+  color: var(--success);
+  border: 1px solid rgba(65,211,154,0.35);
 }
+
+.status-cancelled {
+  background: rgba(255,122,122,0.12);
+  color: var(--danger);
+  border: 1px solid rgba(255,122,122,0.25);
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  margin: 14px 0 18px;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.stat-card {
+  padding: 18px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(154,124,255,0.16), rgba(19,29,43,0.8));
+  border: 1px solid rgba(154,124,255,0.22);
+}
+
+.stat-number {
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--gold-soft);
+}
+
+.admin-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+
+.admin-filter-row > * {
+  flex: 1 1 150px;
+}
+
+.error-text {
+  color: #ffd1d1;
+  background: rgba(255,122,122,0.1);
+  border: 1px solid rgba(255,122,122,0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.success-text {
+  color: #d8ffe8;
+  background: rgba(65,211,154,0.1);
+  border: 1px solid rgba(65,211,154,0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.info-text {
+  margin: 0 0 14px;
+  color: var(--text-soft);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+@media (max-width: 980px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-meta {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .topbar-user {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .app-shell {
+    padding-inline: 12px;
+  }
+
+  .auth-box {
+    margin: 20px auto;
+    padding: 24px 18px;
+  }
+
+  .booking-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 
 .status-cancelled {
   background: linear-gradient(135deg, #ef5350, #e53935);
