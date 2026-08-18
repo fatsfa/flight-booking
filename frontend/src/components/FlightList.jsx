@@ -15,7 +15,32 @@ const BAGGAGE_OPTIONS = [
   { value: 20, label: "+20kg extra (+10% of ticket price)", surcharge: 10 },
 ];
 
-function FlightList({ token, refreshBookings }) {
+const COUNTRY_OPTIONS = [
+  { label: "India", code: "+91", value: "IN" },
+  { label: "United States", code: "+1", value: "US" },
+  { label: "United Kingdom", code: "+44", value: "GB" },
+  { label: "United Arab Emirates", code: "+971", value: "AE" },
+  { label: "Singapore", code: "+65", value: "SG" },
+  { label: "Australia", code: "+61", value: "AU" },
+  { label: "Canada", code: "+1", value: "CA" },
+];
+
+const NATIONALITY_OPTIONS = [
+  "India",
+  "United States",
+  "United Kingdom",
+  "United Arab Emirates",
+  "Singapore",
+  "Australia",
+  "Canada",
+  "Malaysia",
+  "Germany",
+  "France",
+  "Japan",
+  "South Korea",
+];
+
+function FlightList({ token, user, refreshBookings }) {
   const [flights, setFlights] = useState([]);
   const [originInput, setOriginInput] = useState("");
   const [destinationInput, setDestinationInput] = useState("");
@@ -107,15 +132,22 @@ function FlightList({ token, refreshBookings }) {
   };
 
   // opens the booking panel for a specific flight, resets passenger/baggage choices
-  const openBookingPanel = (flightId) => {
-    const initialPassengers = Array.from({ length: 1 }, () => ({
+  const createPassengerTemplate = () => {
+    const selectedCountry = COUNTRY_OPTIONS[0];
+    return {
       fullName: "",
       dateOfBirth: "",
-      nationality: "",
+      nationality: "India",
       passportNumber: "",
-      email: "",
+      email: user?.email || "",
+      country: selectedCountry.value,
+      phoneCode: selectedCountry.code,
       contactNumber: "",
-    }));
+    };
+  };
+
+  const openBookingPanel = (flightId) => {
+    const initialPassengers = Array.from({ length: 1 }, () => createPassengerTemplate());
 
     setSelectedFlightId(flightId);
     setPassengers(1);
@@ -137,8 +169,67 @@ function FlightList({ token, refreshBookings }) {
     return total.toFixed(2);
   };
 
+  const formatPhoneNumber = (countryValue, rawValue) => {
+    const digitsOnly = (rawValue || "").replace(/\D/g, "").replace(/^0+/, "");
+    const formattedDigits = digitsOnly ? (digitsOnly.match(/.{1,5}/g) || [digitsOnly]).join(" ") : "";
+    return formattedDigits;
+  };
+
+  const getPassportPlaceholder = (nationality) => {
+    const templates = {
+      India: "e.g. A1234567",
+      "United States": "e.g. 123456789",
+      "United Kingdom": "e.g. 123456789",
+      "United Arab Emirates": "e.g. P1234567",
+      Singapore: "e.g. S1234567A",
+      Australia: "e.g. 1234567",
+      Canada: "e.g. 123456789",
+      Malaysia: "e.g. A12345678",
+      Germany: "e.g. C1234567",
+      France: "e.g. 12AB34567",
+      Japan: "e.g. P1234567",
+      "South Korea": "e.g. M1234567",
+    };
+    return templates[nationality] || "e.g. Passport number";
+  };
+
   const handlePassengerChange = (index, field, value) => {
     const next = [...passengerDetails];
+
+    if (field === "country") {
+      const selected = COUNTRY_OPTIONS.find((country) => country.value === value) || COUNTRY_OPTIONS[0];
+      const currentNumber = next[index]?.contactNumber || "";
+      next[index] = {
+        ...next[index],
+        country: selected.value,
+        phoneCode: selected.code,
+        contactNumber: formatPhoneNumber(selected.value, currentNumber),
+      };
+      setPassengerDetails(next);
+      return;
+    }
+
+    if (field === "contactNumber") {
+      const selectedCountry = next[index]?.country || COUNTRY_OPTIONS[0].value;
+      const nextValue = value.replace(/[+\s]/g, "");
+      next[index] = {
+        ...next[index],
+        [field]: formatPhoneNumber(selectedCountry, nextValue),
+      };
+      setPassengerDetails(next);
+      return;
+    }
+
+    if (field === "nationality") {
+      next[index] = {
+        ...next[index],
+        [field]: value,
+        passportNumber: "",
+      };
+      setPassengerDetails(next);
+      return;
+    }
+
     next[index] = { ...next[index], [field]: value };
     setPassengerDetails(next);
   };
@@ -253,8 +344,8 @@ function FlightList({ token, refreshBookings }) {
               </strong>
             </p>
             <p>Departure: {new Date(flight.departure_time).toLocaleString()}</p>
-            <p>Price per passenger: ${flight.price}</p>
-            <p>Seats left: {flight.seats_available}</p>
+            <p>Price: ${flight.price}</p>
+           
 
             {selectedFlightId !== flight.id && (
               <button
@@ -288,14 +379,7 @@ function FlightList({ token, refreshBookings }) {
                         setPassengerDetails((prev) => {
                           const next = [...prev];
                           while (next.length < count) {
-                            next.push({
-                              fullName: "",
-                              dateOfBirth: "",
-                              nationality: "",
-                              passportNumber: "",
-                              email: "",
-                              contactNumber: "",
-                            });
+                            next.push(createPassengerTemplate());
                           }
                           while (next.length > count) {
                             next.pop();
@@ -333,19 +417,54 @@ function FlightList({ token, refreshBookings }) {
                       </div>
                       <div className="form-group">
                         <label>Nationality</label>
-                        <input value={passengerDetails[index]?.nationality || ""} onChange={(e) => handlePassengerChange(index, "nationality", e.target.value)} required />
+                        <select
+                          value={passengerDetails[index]?.nationality || "India"}
+                          onChange={(e) => handlePassengerChange(index, "nationality", e.target.value)}
+                          required
+                        >
+                          {NATIONALITY_OPTIONS.map((nationality) => (
+                            <option key={nationality} value={nationality}>
+                              {nationality}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div className="form-group">
                         <label>Passport Number</label>
-                        <input value={passengerDetails[index]?.passportNumber || ""} onChange={(e) => handlePassengerChange(index, "passportNumber", e.target.value)} required />
+                        <input
+                          value={passengerDetails[index]?.passportNumber || ""}
+                          onChange={(e) => handlePassengerChange(index, "passportNumber", e.target.value)}
+                          placeholder={getPassportPlaceholder(passengerDetails[index]?.nationality || "India")}
+                          required
+                        />
                       </div>
                       <div className="form-group">
                         <label>Email</label>
-                        <input type="email" value={passengerDetails[index]?.email || ""} onChange={(e) => handlePassengerChange(index, "email", e.target.value)} required />
+                        <input type="email" value={passengerDetails[index]?.email || user?.email || ""} readOnly required />
                       </div>
+
                       <div className="form-group">
-                        <label>Contact Number</label>
-                        <input value={passengerDetails[index]?.contactNumber || ""} onChange={(e) => handlePassengerChange(index, "contactNumber", e.target.value)} required />
+                        <label>Mobile Number</label>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <select
+                            style={{ maxWidth: "120px" }}
+                            value={passengerDetails[index]?.country || COUNTRY_OPTIONS[0].value}
+                            onChange={(e) => handlePassengerChange(index, "country", e.target.value)}
+                          >
+                            {COUNTRY_OPTIONS.map((country) => (
+                              <option key={country.value} value={country.value}>
+                                {country.code}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            value={passengerDetails[index]?.contactNumber || ""}
+                            onChange={(e) => handlePassengerChange(index, "contactNumber", e.target.value)}
+                            placeholder="98765 43210"
+                            style={{ flex: 1 }}
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}

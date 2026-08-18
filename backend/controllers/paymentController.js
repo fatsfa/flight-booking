@@ -4,6 +4,38 @@ const { confirmBookingSeats } = require('../models/bookingModel');
 
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+const confirmBookingPayment = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    if (!bookingId) {
+      return res.status(400).json({ error: 'bookingId is required' });
+    }
+
+    const booking = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, req.user.id]
+    );
+
+    if (!booking.rows[0]) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    if (booking.rows[0].status === 'cancelled') {
+      return res.status(400).json({ error: 'This booking was cancelled' });
+    }
+
+    if (booking.rows[0].status !== 'confirmed') {
+      await confirmBookingSeats(Number(bookingId));
+    }
+
+    return res.json({ message: 'Booking confirmed', status: 'confirmed' });
+  } catch (err) {
+    console.error('Manual payment confirm failed:', err);
+    res.status(err.status || 500).json({ error: err.message || 'Something went wrong' });
+  }
+};
+
 const createCheckoutSession = async (req, res) => {
   try {
     const { bookingId } = req.body;
@@ -116,4 +148,8 @@ const handleWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
-module.exports = { createCheckoutSession, handleWebhook };
+module.exports = {
+  createCheckoutSession,
+  handleWebhook,
+  confirmBookingPayment,
+};

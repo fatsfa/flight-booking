@@ -69,14 +69,35 @@ const getBookingById = async (id) => {
 };
 
 const deleteExpiredBookings = async () => {
-  const result = await pool.query(
-    `DELETE FROM bookings
-     WHERE status IN ('pending', 'cancelled')
-       AND created_at < NOW() - INTERVAL '5 minutes'
-     RETURNING id` 
-  );
+  const client = await pool.connect();
 
-  return result.rows;
+  try {
+    await client.query('BEGIN');
+
+    const staleRows = await client.query(
+      `SELECT id
+       FROM bookings
+       WHERE status IN ('pending', 'cancelled')
+         AND created_at < NOW() - INTERVAL '5 minutes'
+       FOR UPDATE`,
+      []
+    );
+
+    const staleIds = staleRows.rows.map((row) => row.id);
+
+    if (staleIds.length > 0) {
+      await client.query('DELETE FROM payments WHERE booking_id = ANY($1)', [staleIds]);
+      await client.query('DELETE FROM bookings WHERE id = ANY($1)', [staleIds]);
+    }
+
+    await client.query('COMMIT');
+    return staleIds;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 const getUserBookings = async (userId) => {

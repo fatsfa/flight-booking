@@ -1,25 +1,39 @@
 const nodemailer = require('nodemailer');
 const pool = require('../config/db');
 
-const getTransporter = () => {
+const getTransporter = async () => {
   const host = process.env.EMAIL_HOST;
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
-  if (!host || !user || !pass) {
-    return null;
+  if (host && user && pass) {
+    return nodemailer.createTransport({
+      host,
+      port: Number(process.env.EMAIL_PORT || 587),
+      secure: Number(process.env.EMAIL_PORT || 587) === 465,
+      auth: { user, pass },
+    });
   }
 
-  return nodemailer.createTransport({
-    host,
-    port: Number(process.env.EMAIL_PORT || 587),
-    secure: Number(process.env.EMAIL_PORT || 587) === 465,
-    auth: { user, pass },
-  });
+  try {
+    const account = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: account.user,
+        pass: account.pass,
+      },
+    });
+  } catch (error) {
+    console.error('No email transport configured and Ethereal account creation failed:', error.message);
+    return null;
+  }
 };
 
 const sendBookingEmail = async ({ to, subject, text, html }) => {
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
 
   if (!transporter || !to) {
     console.log(`[Email skipped] ${subject} -> ${to || 'no recipient'}`);
@@ -27,7 +41,7 @@ const sendBookingEmail = async ({ to, subject, text, html }) => {
   }
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM || 'Aurelia Air <no-reply@aureliaair.com>',
       to,
       subject,
@@ -35,7 +49,12 @@ const sendBookingEmail = async ({ to, subject, text, html }) => {
       html,
     });
 
-    return { ok: true, skipped: false };
+    if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      return { ok: true, skipped: false };
+    }
+
+    console.log('Email preview URL:', nodemailer.getTestMessageUrl(info));
+    return { ok: true, skipped: false, preview: nodemailer.getTestMessageUrl(info) };
   } catch (error) {
     console.error('Failed to send email:', error.message);
     return { ok: false, skipped: false, error: error.message };

@@ -18,10 +18,14 @@ function MyBookings({ token, refreshTrigger }) {
   };
 
   const handleCancelBooking = async (bookingId) => {
+    const original = bookings;
+    setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+
     try {
       await cancelBooking(bookingId, token);
-      loadBookings();
+      await loadBookings();
     } catch (err) {
+      setBookings(original);
       alert(err.message);
     }
   };

@@ -142,7 +142,7 @@ function App() {
 
         <div className="workspace-grid">
           <div className="panel main-panel">
-            <FlightList token={token} refreshBookings={triggerBookingsRefresh} />
+            <FlightList token={token} user={user} refreshBookings={triggerBookingsRefresh} />
           </div>
 
           <aside className="panel side-panel">

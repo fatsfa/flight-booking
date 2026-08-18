@@ -270,13 +270,14 @@ h3 {
 }
 
 .form-group input,
+.form-group select,
 .search-form input,
 .admin-form input,
 .booking-panel select,
 .admin-filter-row select,
 .admin-filter-row input {
   width: 100%;
-  background: rgba(255,255,255,0.04);
+  background: rgba(15, 23, 35, 0.9);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   color: var(--text);
@@ -289,6 +290,11 @@ h3 {
 .search-form input::placeholder,
 .admin-filter-row input::placeholder {
   color: rgba(237,243,255,0.5);
+}
+
+select option {
+  background: #101a2a;
+  color: var(--text);
 }
 
 .form-group input:focus,
