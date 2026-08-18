@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://flight-booking-m2av.onrender.com/api";
 
 function getStoredAccessToken() {
   return localStorage.getItem("token");
