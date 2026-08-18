@@ -1,25 +1,26 @@
-import {useState} from "react"
-import {signupUser} from "../api"
+import { useState } from "react";
+import { signupUser, loginUser } from "../api";
 import { motion } from "framer-motion";
-function Signup({ switchToLogin }) {
+
+function Signup({ switchToLogin, onLoginSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    setSuccessMsg("");
 
     try {
+      // step 1 - create the account
       await signupUser(name, email, password);
-      setSuccessMsg("Account created! You can login now.");
-      // clear the form
-      setName("");
-      setEmail("");
-      setPassword("");
+
+      // step 2 - log them in right away using the same credentials
+      const loginData = await loginUser(email, password);
+
+      // step 3 - tell the parent they're logged in now, takes them to flight search
+      onLoginSuccess(loginData.token, loginData.user);
     } catch (err) {
       setErrorMsg(err.message);
     }
@@ -27,11 +28,11 @@ function Signup({ switchToLogin }) {
 
   return (
     <motion.div
-  className="auth-box"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.4 }}
->
+      className="auth-box"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <p className="eyebrow auth-eyebrow">Create account</p>
       <h2>Sign Up</h2>
       <form onSubmit={handleSubmit}>
@@ -66,7 +67,6 @@ function Signup({ switchToLogin }) {
         </div>
 
         {errorMsg && <p className="error-text">{errorMsg}</p>}
-        {successMsg && <p className="success-text">{successMsg}</p>}
 
         <button type="submit">Sign Up</button>
       </form>

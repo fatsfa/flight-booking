@@ -66,7 +66,8 @@ function App() {
     <div className="container">
       <h1>Flight Booking</h1>
       {showSignup ? (
-        <Signup switchToLogin={() => setShowSignup(false)} />
+        <Signup switchToLogin={() => setShowSignup(false)} 
+        onLoginSuccess={handleLoginSuccess}/>
       ) : (
         <Login
           onLoginSuccess={handleLoginSuccess}
