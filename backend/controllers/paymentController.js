@@ -71,8 +71,8 @@ const createCheckoutSession = async (req, res) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${frontendUrl}/payment-success?booking_id=${booking.id}`,
-      cancel_url: `${frontendUrl}/payment-cancelled?booking_id=${booking.id}`,
+     success_url: 'https://flight-booking-1-g2um.onrender.com/payment-success?booking_id=' + booking.id,
+cancel_url: 'https://flight-booking-1-g2um.onrender.com/payment-cancelled?booking_id=' + booking.id,
       metadata: { bookingId: booking.id.toString() },
     });
 
